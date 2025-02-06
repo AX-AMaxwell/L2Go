@@ -1,7 +1,10 @@
 go 1.23.2
 
 use (
-	./adhoc
 	./cli
+	./data_types
+	./feedly
+	./gc
 	./interfaces
+	./mysvc
 )

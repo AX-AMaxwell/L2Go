@@ -1,18 +1,14 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log"
-	"os"
-	"strconv"
-	"strings"
 )
 
 /*
 
 Purpose:
-- Convert integer values, represented as strings from command-line input
+- Convert integer values, represented as strings, from command-line input
 - Convert from and to: hex, decimal and binary
 
 Implementation Choices:
@@ -21,8 +17,8 @@ Implementation Choices:
 - Should have explicit flag to define output type
 
 Inputs:
-1. Value converting from (represented as `0x`, `0b` or `0`)
-2. Type we want to convert to (hex, decimal, binary)
+1. Value converting from (represented as `0x`, `0b` or `0`) (Positional)
+2. Type we want to convert to (hex, decimal, binary) (Flags)
 
 ```
 ./cli --to-hex 0b0100
@@ -37,64 +33,27 @@ Inputs:
 
 func main() {
 	var (
-		f     = parseArgs()
-		value int64
-		err   error
+		f        Args
+		valueInt int64
+		valueStr string
+		err      error
 	)
 
-	switch {
-	case isBin(f.value):
-		f.value = strings.TrimPrefix(f.value, "0b")
-		value, err = strconv.ParseInt(f.value, 2, 64)
-
-	case isHex(f.value):
-		f.value = strings.TrimPrefix(f.value, "0x")
-		value, err = strconv.ParseInt(f.value, 16, 64)
-
-	default:
-		value, err = strconv.ParseInt(f.value, 10, 64)
+	if f, err = ParseArgs(); err != nil {
+		log.Fatalf("Failed to parse command-line inputs: %s.", err)
 	}
 
-	if err != nil {
-		log.Fatalf("Oh nooooo: %s!", err)
+	if valueInt, err = ParseInt(f.value); err != nil {
+		log.Fatalf(
+			"Failed to parse provided input value ['%s'] as an integer: %s.",
+			f.value,
+			err,
+		)
 	}
 
-	fmt.Printf("Success ['%d']!\n", value)
-}
-
-func isBin(v string) bool {
-	return strings.HasPrefix(v, "0b")
-}
-
-func isHex(v string) bool {
-	return strings.HasPrefix(v, "0x")
-}
-
-type flags struct {
-	toHex, toBin, toDec bool
-	value               string
-}
-
-func parseArgs() flags {
-	var f flags
-
-	flag.BoolVar(&f.toHex, "to-hex", false, "")
-	flag.BoolVar(&f.toHex, "h", false, "")
-
-	flag.BoolVar(&f.toBin, "to-bin", false, "")
-	flag.BoolVar(&f.toBin, "b", false, "")
-
-	flag.BoolVar(&f.toDec, "to-dec", false, "")
-	flag.BoolVar(&f.toDec, "d", false, "")
-
-	flag.Parse()
-
-	var args = flag.Args()
-	if len(args) < 1 {
-		fmt.Println("Oh no! We needed a value to convert!")
-		os.Exit(1)
+	if valueStr = FormatInt(valueInt, f); len(valueStr) == 0 {
+    
 	}
-	f.value = args[0]
 
-	return f
+	fmt.Println(valueStr)
 }
